@@ -1,0 +1,80 @@
+using System;
+using System.Collections.Generic;
+using NCalc;
+
+class Program
+{
+    static void Main()
+    {
+        Console.WriteLine("Ingrese una expresión lógica (por ejemplo, 'A && B || C'):");
+        string expresion = Console.ReadLine();
+
+        // Obtener las variables presentes en la expresión
+        List<string> variables = GetVariables(expresion);
+
+        // Generar e imprimir la tabla de verdad
+        GenerateTruthTable(variables, expresion);
+    }
+
+    static List<string> GetVariables(string expression)
+    {
+        Expression e = new Expression(expression);
+        e.EvaluateFunction += (name, args) =>
+        {
+            if (!args.HasResult)
+            {
+                args.Result = false; // Inicializa las variables como "false"
+            }
+        };
+        e.Evaluate();
+        return e.Parameters.Keys;
+    }
+
+    static void GenerateTruthTable(List<string> variables, string expression)
+    {
+        int numVariables = variables.Count;
+        int numCombinations = (int)Math.Pow(2, numVariables);
+
+        Console.WriteLine("Tabla de verdad:");
+
+        // Encabezado
+        foreach (var variable in variables)
+        {
+            Console.Write(variable.PadRight(5));
+        }
+        Console.WriteLine($"|   {expression}");
+
+        for (int i = 0; i < numCombinations; i++)
+        {
+            // Generar una fila de la tabla de verdad
+            List<bool> values = GetBooleanValues(i, numVariables);
+
+            // Evaluar la expresión para esta combinación
+            Expression e = new Expression(expression);
+
+            for (int j = 0; j < numVariables; j++)
+            {
+                e.Parameters[variables[j]] = values[j];
+            }
+
+            bool result = (bool)e.Evaluate();
+
+            // Imprimir fila
+            for (int j = 0; j < numVariables; j++)
+            {
+                Console.Write((values[j] ? "true " : "false").PadRight(5));
+            }
+            Console.WriteLine($"|   {result}");
+        }
+    }
+
+    static List<bool> GetBooleanValues(int number, int numVariables)
+    {
+        List<bool> values = new List<bool>();
+        for (int i = 0; i < numVariables; i++)
+        {
+            values.Add((number & (1 << i)) != 0);
+        }
+        return values;
+    }
+}
